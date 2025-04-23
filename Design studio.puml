@@ -1,0 +1,126 @@
+@startuml
+
+' =============================
+' DOMAIN LAYER
+' =============================
+package "Domain Layer" {
+
+  class Design {
+    - UUID id
+    - String name
+    - Date creationDate
+    - User owner
+    - List<Layer> layers
+    + addLayer(Layer layer): void
+    + removeLayer(Layer layer): void
+    + getPreview(): Image
+    + getLayers(): List<Layer>
+  }
+
+  abstract class Layer {
+    - float positionX
+    - float positionY
+    - float rotation
+    - float scale
+    + move(float x, float y): void
+    + scaleTo(float value): void
+    + rotate(float degrees): void
+  }
+
+  class TextLayer extends Layer {
+    - String text
+    - String font
+    - String color
+    + updateText(String newText): void
+  }
+
+  class ImageLayer extends Layer {
+    - String imageUrl
+    - float opacity
+    + updateImage(String newUrl): void
+    + changeOpacity(float newOpacity): void
+  }
+
+  class ShapeLayer extends Layer {
+    - String shapeType
+    - String fillColor
+    - String borderColor
+    + updateShape(String newShapeType): void
+    + updateColors(String newFillColor, String newBorderColor): void
+  }
+
+  class Template {
+    - UUID id
+    - String name
+    - Design baseDesign
+    + getDesign(): Design
+  }
+
+  class User {
+    - UUID id
+    - String username
+    + getUsername(): String
+  }
+
+  Layer <|-- TextLayer
+  Layer <|-- ImageLayer
+  Layer <|-- ShapeLayer
+  Template --> Design
+  Design --> Layer
+  Design --> User
+}
+
+' =============================
+' APPLICATION LAYER
+' =============================
+package "Application Layer" {
+
+  class TemplateService {
+    + createTemplate(String name, Design baseDesign): Template
+    + getTemplateById(UUID id): Template
+  }
+
+  class DesignService {
+    + addLayerToDesign(UUID designId, Layer layer): void
+    + removeLayerFromDesign(UUID designId, Layer layer): void
+    + getPreview(UUID designId): Image
+  }
+
+  TemplateService --> Template
+  DesignService --> Design
+}
+
+' =============================
+' INFRASTRUCTURE LAYER
+' =============================
+package "Infrastructure Layer" {
+
+  class CloudinaryAdapter {
+    + uploadImage(byte[] imageData): String
+    + deleteImage(String imageUrl): void
+  }
+
+  ImageLayer --> CloudinaryAdapter : uses >
+}
+
+' =============================
+' INTERFACE LAYER
+' =============================
+package "Interface Layer" {
+
+  class TemplateController {
+    + getTemplate(UUID id): Template
+    + createTemplate(String name, Design baseDesign): Template
+  }
+
+  class DesignController {
+    + postLayer(UUID designId, Layer layer): void
+    + deleteLayer(UUID designId, Layer layer): void
+    + getPreview(UUID designId): Image
+  }
+
+  TemplateController --> TemplateService
+  DesignController --> DesignService
+}
+
+@enduml
