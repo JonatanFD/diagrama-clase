@@ -1,0 +1,106 @@
+@startuml
+' =============================
+' DOMAIN LAYER
+' =============================
+package "Domain Layer" {
+
+  class Fulfillment {
+    - UUID id
+    - Order order
+    - FulfillmentStatus status
+    - Date startedAt
+    - Date completedAt
+    + start(): void
+    + markPacked(): void
+    + markShipped(): void
+    + getStatus(): FulfillmentStatus
+  }
+
+  enum FulfillmentStatus {
+    PENDING
+    IN_PRODUCTION
+    PACKED
+    SHIPPED
+    DELIVERED
+  }
+
+  class Order {
+    - UUID id
+    - String customerName
+    + getCustomerName(): String
+  }
+
+  interface FulfillmentRepository {
+    + save(Fulfillment fulfillment): void
+    + findByOrderId(UUID orderId): Fulfillment
+    + updateStatus(UUID orderId, FulfillmentStatus status): void
+  }
+
+  class CustomerName {
+    - String value
+    + getValue(): String
+  }
+
+  class OrderId {
+    - UUID value
+    + getValue(): UUID
+  }
+
+  Order --> CustomerName
+  Order --> OrderId
+
+
+  Fulfillment --> Order
+  Fulfillment --> FulfillmentStatus
+}
+
+' =============================
+' APPLICATION LAYER
+' =============================
+package "Application Layer" {
+
+  class FulfillmentService {
+    - FulfillmentRepository fulfillmentRepository
+    - ShippingService shippingService
+    + initiateFulfillment(UUID orderId): void
+    + packOrder(UUID orderId): void
+    + shipOrder(UUID orderId): void
+  }
+
+  FulfillmentService --> Fulfillment
+  FulfillmentService --> FulfillmentRepository
+  
+}
+
+' =============================
+' INFRASTRUCTURE LAYER
+' =============================
+package "Infrastructure Layer" {
+
+  class FulfillmentRepositoryImpl {
+    - Map<UUID, Fulfillment> database
+    + save(Fulfillment fulfillment): void
+    + findByOrderId(UUID orderId): Fulfillment
+    + updateStatus(UUID orderId, FulfillmentStatus status): void
+  }
+
+  FulfillmentRepositoryImpl ..|> FulfillmentRepository
+
+   
+}
+
+' =============================
+' INTERFACE LAYER
+' =============================
+package "Interface Layer" {
+
+  class FulfillmentController {
+    - FulfillmentService fulfillmentService
+    + startFulfillment(UUID orderId): String
+    + packOrder(UUID orderId): String
+    + shipOrder(UUID orderId): String
+  }
+
+  FulfillmentController --> FulfillmentService
+}
+@enduml
