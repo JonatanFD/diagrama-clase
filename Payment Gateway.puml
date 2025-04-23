@@ -1,0 +1,86 @@
+@startuml
+
+' =============================
+' DOMAIN LAYER
+' =============================
+package "Domain Layer" {
+
+  class Payment <<Entity>> {
+    - UUID id
+    - Money amount
+    - String status
+    + getStatus(): String
+    + getAmount(): Money
+  }
+
+  class Money <<ValueObject>> {
+    - BigDecimal value
+    - Currency currency
+    + getValue(): BigDecimal
+    + getCurrency(): Currency
+  }
+
+  class Currency <<ValueObject>> {
+    - String code
+    + getCode(): String
+  }
+
+  interface PaymentProcessor {
+    + processPayment(Payment payment): boolean
+    + refundPayment(Payment payment): boolean
+  }
+
+  Payment --> Money
+  Money --> Currency
+}
+
+' =============================
+' APPLICATION LAYER
+' =============================
+package "Application Layer" {
+
+  class PaymentService {
+    - PaymentProcessor processor
+    + makePayment(Payment payment): boolean
+    + issueRefund(Payment payment): boolean
+  }
+
+  PaymentService --> Payment
+  PaymentService --> PaymentProcessor
+}
+
+' =============================
+' INFRASTRUCTURE LAYER
+' =============================
+package "Infrastructure Layer" {
+
+  class StripePaymentAdapter {
+    - String stripeApiKey
+    + processPayment(Payment payment): boolean
+    + refundPayment(Payment payment): boolean
+  }
+
+  class "Stripe API" {
+    + createPaymentIntent(BigDecimal amount, String currency): String
+    + confirmPayment(String paymentIntentId): boolean
+  }
+
+  StripePaymentAdapter --> "Stripe API"
+  StripePaymentAdapter ..|> PaymentProcessor
+}
+
+' =============================
+' INTERFACE LAYER
+' =============================
+package "Interface Layer" {
+
+  class PaymentController {
+    - PaymentService paymentService
+    + pay(Payment payment): boolean
+    + refund(Payment payment): boolean
+  }
+
+  PaymentController --> PaymentService
+}
+
+@enduml
