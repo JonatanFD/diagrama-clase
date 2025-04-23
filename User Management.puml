@@ -3,7 +3,7 @@
 ' DOMAIN LAYER
 ' =============================
 package "Domain Layer" {
-  class User <<Entiy>> {
+  class User <<Entity>> {
     - UUID id
     - Username username
     - Email email
@@ -13,21 +13,21 @@ package "Domain Layer" {
     + isAuthorized(String permission): boolean
     + changePassword(Password oldPassword, Password newPassword): boolean
   }
-  
+
   class Username <<ValueObject>> {
     - String value
     + Username(String value)
     + getValue(): String
     + isValid(): boolean
   }
-  
+
   class Email <<ValueObject>> {
     - String value
     + Email(String value)
     + getValue(): String
     + isValid(): boolean
   }
-  
+
   class Password <<ValueObject>> {
     - String hash
     - String salt
@@ -37,7 +37,7 @@ package "Domain Layer" {
     + matches(String plainText): boolean
     + isExpired(): boolean
   }
-  
+
   class Role <<ValueObject>> {
     - String name
     + getName(): String
@@ -53,11 +53,11 @@ package "Domain Layer" {
     + toString(): String
   }
 
-  User --> Role
-  User --> Address
   User --> Username
   User --> Email
   User --> Password
+  User --> Role
+  User --> Address
 }
 
 ' =============================
@@ -69,12 +69,12 @@ package "Application Layer" {
     + save(User user): void
     + existsByEmail(Email email): boolean
   }
-  
+
   interface IAuthService {
     + authenticate(Username username, Password password): boolean
     + generateToken(User user): String
   }
-  
+
   class UserService {
     - IUserRepository userRepository
     - IAuthService authService
@@ -82,9 +82,10 @@ package "Application Layer" {
     + login(Username username, Password password): String
     + changePassword(Username username, Password oldPassword, Password newPassword): boolean
   }
-  
+
   UserService --> IUserRepository
   UserService --> IAuthService
+  UserService --> User : «manages»
 }
 
 ' =============================
@@ -104,6 +105,7 @@ package "Infrastructure Layer" {
 
   UserRepositoryImpl ..|> IUserRepository
   JwtAuthService ..|> IAuthService
+  JwtAuthService --> User : «validates»
 }
 
 ' =============================
@@ -116,15 +118,7 @@ package "Interface Layer" {
     + login(String username, String password): ResponseEntity<String>
     + changePassword(String username, String oldPassword, String newPassword): ResponseEntity<Boolean>
   }
-  
+
   UserController --> UserService
 }
-
-' =============================
-' CONNECTIONS BETWEEN LAYERS
-' =============================
-UserService ..> Password : «uses»
-UserService ..> Username : «uses»
-UserService ..> Email : «uses»
-JwtAuthService ..> User : «validates»
 @enduml

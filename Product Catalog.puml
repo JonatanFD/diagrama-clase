@@ -4,16 +4,6 @@
 ' =============================
 package "Domain Layer" {
 
-  class ProductId <<ValueObject>> {
-    - UUID value
-    + getValue(): UUID
-  }
-
-  class ProductTitle <<ValueObject>> {
-    - String value
-    + getValue(): String
-  }
-
   class ProductDescription <<ValueObject>> {
     - String value
     + getValue(): String
@@ -43,8 +33,8 @@ package "Domain Layer" {
   }
 
   class Product <<Entity>> {
-    - ProductId id
-    - ProductTitle title
+    - UUID id
+    - String title
     - ProductDescription description
     - Price price
     - List<Label> tags
@@ -62,8 +52,7 @@ package "Domain Layer" {
   }
 
   ' Relationships between Value Objects and Entities
-  Product *-- ProductId
-  Product *-- ProductTitle
+  
   Product *-- ProductDescription
   Product *-- Price
   Product *-- Score
