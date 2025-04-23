@@ -4,12 +4,11 @@
 ' =============================
 package "Domain Layer" {
 
-  class Fulfillment {
+  class Fulfillment <<Entity>> {
     - UUID id
     - Order order
     - FulfillmentStatus status
-    - Date startedAt
-    - Date completedAt
+    - FulfillmentDate fulfillmentDate
     + start(): void
     + markPacked(): void
     + markShipped(): void
@@ -24,9 +23,9 @@ package "Domain Layer" {
     DELIVERED
   }
 
-  class Order {
+  class Order <<Entity>> {
     - UUID id
-    - String customerName
+    - CustomerName customerName
     + getCustomerName(): String
   }
 
@@ -36,22 +35,22 @@ package "Domain Layer" {
     + updateStatus(UUID orderId, FulfillmentStatus status): void
   }
 
-  class CustomerName {
+  class CustomerName <<ValueObject>> {
     - String value
     + getValue(): String
   }
 
-  class OrderId {
-    - UUID value
-    + getValue(): UUID
+  class FulfillmentDate <<ValueObject>> {
+    - Date startedAt
+    - Date completedAt
+    + getStartedAt(): Date
+    + getCompletedAt(): Date
   }
 
   Order --> CustomerName
-  Order --> OrderId
-
-
   Fulfillment --> Order
   Fulfillment --> FulfillmentStatus
+  Fulfillment --> FulfillmentDate
 }
 
 ' =============================
@@ -69,7 +68,6 @@ package "Application Layer" {
 
   FulfillmentService --> Fulfillment
   FulfillmentService --> FulfillmentRepository
-  
 }
 
 ' =============================
@@ -85,8 +83,6 @@ package "Infrastructure Layer" {
   }
 
   FulfillmentRepositoryImpl ..|> FulfillmentRepository
-
-   
 }
 
 ' =============================

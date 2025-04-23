@@ -1,15 +1,13 @@
 @startuml
-
 ' =============================
 ' DOMAIN LAYER
 ' =============================
 package "Domain Layer" {
 
-  class Design {
+  class Design <<Entity>> {
     - UUID id
     - String name
     - Date creationDate
-    - User owner
     - List<Layer> layers
     + addLayer(Layer layer): void
     + removeLayer(Layer layer): void
@@ -17,7 +15,7 @@ package "Domain Layer" {
     + getLayers(): List<Layer>
   }
 
-  abstract class Layer {
+  abstract class Layer <<Entity>> {
     - float positionX
     - float positionY
     - float rotation
@@ -27,21 +25,21 @@ package "Domain Layer" {
     + rotate(float degrees): void
   }
 
-  class TextLayer extends Layer {
+  class TextLayer <<Entity>> extends Layer {
     - String text
     - String font
     - String color
     + updateText(String newText): void
   }
 
-  class ImageLayer extends Layer {
+  class ImageLayer <<Entity>> extends Layer {
     - String imageUrl
     - float opacity
     + updateImage(String newUrl): void
     + changeOpacity(float newOpacity): void
   }
 
-  class ShapeLayer extends Layer {
+  class ShapeLayer <<Entity>> extends Layer {
     - String shapeType
     - String fillColor
     - String borderColor
@@ -49,25 +47,16 @@ package "Domain Layer" {
     + updateColors(String newFillColor, String newBorderColor): void
   }
 
-  class Template {
+  class Template <<Entity>> {
     - UUID id
     - String name
     - Design baseDesign
     + getDesign(): Design
-  }
-
-  class User {
-    - UUID id
-    - String username
-    + getUsername(): String
-  }
-
-  Layer <|-- TextLayer
-  Layer <|-- ImageLayer
-  Layer <|-- ShapeLayer
+  }  
+  
   Template --> Design
   Design --> Layer
-  Design --> User
+ 
 }
 
 ' =============================
@@ -122,5 +111,4 @@ package "Interface Layer" {
   TemplateController --> TemplateService
   DesignController --> DesignService
 }
-
 @enduml
