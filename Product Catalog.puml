@@ -1,0 +1,143 @@
+@startuml
+' =============================
+' DOMAIN LAYER
+' =============================
+package "Domain Layer" {
+
+  class ProductId <<ValueObject>> {
+    - UUID value
+    + getValue(): UUID
+  }
+
+  class ProductTitle <<ValueObject>> {
+    - String value
+    + getValue(): String
+  }
+
+  class ProductDescription <<ValueObject>> {
+    - String value
+    + getValue(): String
+  }
+
+  class Price <<ValueObject>> {
+    - float value
+    - String currency
+    + getValue(): float
+    + getCurrency(): String
+  }
+
+  class Score <<ValueObject>> {
+    - float value
+    - int maxValue
+    + getValue(): float
+    + getPercentage(): float
+    + isValid(): boolean
+  }
+
+  class Label <<ValueObject>> {
+    - String value
+    - String colorCode
+    + getValue(): String
+    + getColor(): String
+    + isValid(): boolean
+  }
+
+  class Product <<Entity>> {
+    - ProductId id
+    - ProductTitle title
+    - ProductDescription description
+    - Price price
+    - List<Label> tags
+    - Score rating
+    - Image previewImage
+    + getInfo(): String
+    + getPreview(): Image
+    + calculateAverageScore(): float
+  }
+
+  class Category <<Entity>> {
+    - CategoryId id
+    - CategoryName name
+    + getName(): String
+  }
+
+  ' Relationships between Value Objects and Entities
+  Product *-- ProductId
+  Product *-- ProductTitle
+  Product *-- ProductDescription
+  Product *-- Price
+  Product *-- Score
+  Product *-- "0..*" Label
+  
+  ' Relationship between Product and Category
+  Product --> Category
+
+}
+
+' =============================
+' APPLICATION LAYER
+' =============================
+package "Application Layer" {
+
+  interface ProductRepository {
+    + findAll(): List<Product>
+    + findById(ProductId id): Product
+    + findByCategory(CategoryId categoryId): List<Product>
+    + findByScore(Score minScore): List<Product>
+    + findByLabel(Label label): List<Product>
+  }
+
+  class ProductCatalogService {
+    - ProductRepository productRepository
+    + listAllProducts(): List<Product>
+    + getProductDetails(ProductId id): Product
+    + listByCategory(CategoryId categoryId): List<Product>
+    + listTopRatedProducts(Score minScore): List<Product>
+    + listProductsByLabel(Label label): List<Product>
+  }
+
+  ProductCatalogService --> Product
+  ProductCatalogService --> ProductRepository
+}
+
+' =============================
+' INFRASTRUCTURE LAYER
+' =============================
+package "Infrastructure Layer" {
+
+  class ProductRepositoryImpl {
+    - List<Product> productsDB
+    + findAll(): List<Product>
+    + findById(ProductId id): Product
+    + findByCategory(CategoryId categoryId): List<Product>
+    + findByScore(Score minScore): List<Product>
+    + findByLabel(Label label): List<Product>
+  }
+
+  class CloudinaryImageService {
+    - String cloudName
+    + getImageUrl(String imageId): String
+    + deleteImage(String imageUrl): void
+  }
+
+  ProductRepositoryImpl --> CloudinaryImageService
+  ProductRepositoryImpl ..|> ProductRepository
+}
+
+' =============================
+' INTERFACE LAYER
+' =============================
+package "Interface Layer" {
+
+  class ProductCatalogController {
+    - ProductCatalogService catalogService
+    + getAllProducts(): List<Product>
+    + getProduct(ProductId id): Product
+    + getProductsByCategory(CategoryId categoryId): List<Product>
+    + getTopRatedProducts(float minScore): List<Product>
+    + getProductsWithLabel(String label): List<Product>
+  }
+
+  ProductCatalogController --> ProductCatalogService
+}
+@enduml
