@@ -1,0 +1,115 @@
+@startuml
+' =============================
+' DOMAIN LAYER
+' =============================
+package "Domain Layer" {
+
+  class Order <<Entity>> {
+    - UUID id
+    - Date orderDate
+    - OrderStatus status
+    - User customer
+    - List<OrderItem> items
+    + calculateTotal(): Money
+    + markAsReady(): void
+    + addItem(OrderItem item): void
+  }
+
+  class OrderItem <<Entity>> {
+    - UUID id
+    - ProductName productName
+    - Quantity quantity
+    - Money unitPrice
+    + getSubtotal(): Money
+  }
+
+  enum OrderStatus {
+    PENDING
+    PAID
+    CANCELLED
+    READY_FOR_PRODUCTION
+  }
+
+  interface OrderRepository {
+    + save(Order order): void
+    + findById(UUID id): Order
+    + update(Order order): void
+  }
+
+  ' === Value Objects ===
+  class Money <<Value Object>> {
+    - double amount
+    + getAmount(): double
+  }
+
+  class Quantity <<Value Object>> {
+    - int value
+    + getValue(): int
+  }
+
+  class ProductName <<Value Object>> {
+    - String value
+    + getValue(): String
+  }
+
+  Order --> OrderItem
+  Order --> OrderStatus
+  OrderItem --> Money
+  OrderItem --> Quantity
+  OrderItem --> ProductName
+}
+
+' =============================
+' APPLICATION LAYER
+' =============================
+package "Application Layer" {
+
+  class OrderService {
+    - OrderRepository orderRepository
+    + createOrder(User user, List<OrderItem> items): Order
+    + payOrder(UUID orderId): void
+    + cancelOrder(UUID orderId): void
+    + markOrderReady(UUID orderId): void
+  }
+
+  OrderService --> Order
+  OrderService --> OrderRepository
+}
+
+' =============================
+' INFRASTRUCTURE LAYER
+' =============================
+package "Infrastructure Layer" {
+
+  class OrderRepositoryImpl {
+    + save(Order order): void
+    + findById(UUID id): Order
+    + update(Order order): void
+  }
+
+  OrderRepositoryImpl ..|> OrderRepository
+
+  class PaymentGatewayAdapter {
+    + processPayment(UUID orderId, double amount): boolean
+  }
+
+  OrderService --> OrderRepositoryImpl
+  OrderService --> PaymentGatewayAdapter : uses
+}
+
+' =============================
+' INTERFACE LAYER
+' =============================
+package "Interface Layer" {
+
+  class OrderController {
+    - OrderService orderService
+    + postOrder(User user, List<OrderItem> items): Order
+    + payOrder(UUID orderId): void
+    + cancelOrder(UUID orderId): void
+    + markReady(UUID orderId): void
+  }
+
+  OrderController --> OrderService
+}
+@enduml
