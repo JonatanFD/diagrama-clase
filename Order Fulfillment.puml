@@ -2,17 +2,28 @@
 ' =============================
 ' DOMAIN LAYER
 ' =============================
+class OrderId <<ValueObject>> {
+    - UUID value
+  + OrderId(UUID value)
+}
+
 package "Domain Layer" {
 
   class Fulfillment <<Entity>> {
     - UUID id
-    - Order order
+    - OrderId orderId
     - FulfillmentStatus status
     - FulfillmentDate fulfillmentDate
+    - boolean isCanceled
+    - Date shippedAt
+    - Date packedAt
     + start(): void
     + markPacked(): void
     + markShipped(): void
     + getStatus(): FulfillmentStatus
+    + cancel(): void
+    + isDelayed(): boolean
+    + estimateDeliveryDate(): Date
   }
 
   enum FulfillmentStatus {
@@ -21,23 +32,13 @@ package "Domain Layer" {
     PACKED
     SHIPPED
     DELIVERED
-  }
-
-  class Order <<Entity>> {
-    - UUID id
-    - CustomerName customerName
-    + getCustomerName(): String
+    CANCELED
   }
 
   interface FulfillmentRepository {
     + save(Fulfillment fulfillment): void
-    + findByOrderId(UUID orderId): Fulfillment
-    + updateStatus(UUID orderId, FulfillmentStatus status): void
-  }
-
-  class CustomerName <<ValueObject>> {
-    - String value
-    + getValue(): String
+    + findByOrderId(OrderId orderId): Fulfillment
+    + updateStatus(OrderId orderId, FulfillmentStatus status): void
   }
 
   class FulfillmentDate <<ValueObject>> {
@@ -45,10 +46,10 @@ package "Domain Layer" {
     - Date completedAt
     + getStartedAt(): Date
     + getCompletedAt(): Date
+    + calculateDuration(): long
   }
 
-  Order --> CustomerName
-  Fulfillment --> Order
+  Fulfillment --> OrderId
   Fulfillment --> FulfillmentStatus
   Fulfillment --> FulfillmentDate
 }
@@ -61,9 +62,12 @@ package "Application Layer" {
   class FulfillmentService {
     - FulfillmentRepository fulfillmentRepository
     - ShippingService shippingService
-    + initiateFulfillment(UUID orderId): void
-    + packOrder(UUID orderId): void
-    + shipOrder(UUID orderId): void
+    + initiateFulfillment(OrderId orderId): void
+    + packOrder(OrderId orderId): void
+    + shipOrder(OrderId orderId): void
+    + cancelFulfillment(OrderId orderId): void
+    + getEstimatedDeliveryDate(OrderId orderId): Date
+    + isOrderDelayed(OrderId orderId): boolean
   }
 
   FulfillmentService --> Fulfillment
@@ -76,10 +80,10 @@ package "Application Layer" {
 package "Infrastructure Layer" {
 
   class FulfillmentRepositoryImpl {
-    - Map<UUID, Fulfillment> database
+    - Map<OrderId, Fulfillment> database
     + save(Fulfillment fulfillment): void
-    + findByOrderId(UUID orderId): Fulfillment
-    + updateStatus(UUID orderId, FulfillmentStatus status): void
+    + findByOrderId(OrderId orderId): Fulfillment
+    + updateStatus(OrderId orderId, FulfillmentStatus status): void
   }
 
   FulfillmentRepositoryImpl ..|> FulfillmentRepository
@@ -92,9 +96,12 @@ package "Interface Layer" {
 
   class FulfillmentController {
     - FulfillmentService fulfillmentService
-    + startFulfillment(UUID orderId): String
-    + packOrder(UUID orderId): String
-    + shipOrder(UUID orderId): String
+    + startFulfillment(OrderId orderId): String
+    + packOrder(OrderId orderId): String
+    + shipOrder(OrderId orderId): String
+    + cancelFulfillment(OrderId orderId): String
+    + getEstimatedDeliveryDate(OrderId orderId): Date
+    + isOrderDelayed(OrderId orderId): boolean
   }
 
   FulfillmentController --> FulfillmentService
