@@ -15,11 +15,6 @@ package "Shared Kernel" {
       + Money multiply(double multiplier)
     }
 
-    class OrderId <<ValueObject>> {
-    - UUID value
-      + OrderId(UUID value)
-    }
-
     class Currency <<ValueObject>> {
       - String code
       + String getCode()
@@ -49,6 +44,11 @@ package "Shared Kernel" {
       + EntityId(UUID value)
     }
 
+    class OrderId <<ValueObject>> {
+      - UUID value
+      + OrderId(UUID value)
+    }
+
     class CustomerName <<ValueObject>> {
       - String value
       + String getValue()
@@ -64,11 +64,9 @@ package "Shared Kernel" {
       + boolean equals(Object other)
       + int hashCode()
     }
-
-
   }
 
-  ' ==== SERVICES ====
+  ' ==== INFRASTRUCTURE SERVICES ====
   package "Infrastructure Services" {
     interface ImageService {
       + String uploadImage(byte[] imageData)
@@ -91,7 +89,7 @@ package "Shared Kernel" {
     }
   }
 
-  ' ==== REPOSITORIES ====
+  ' ==== REPOSITORY INTERFACES ====
   package "Repository Interfaces" {
     interface Repository<T extends Entity<ID>, ID extends Id<?>> {
       + Optional<T> findById(ID id)
@@ -152,7 +150,7 @@ package "Shared Kernel" {
     }
   }
 
-  ' ==== EVENTS ====
+  ' ==== DOMAIN EVENTS ====
   package "Domain Events" {
     abstract class DomainEvent {
       - UUID eventId
